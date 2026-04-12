@@ -123,7 +123,7 @@ namespace VortexTrade
 
         private static Icon CreateStockChartIcon()
         {
-            var bmp = new Bitmap(32, 32);
+            using var bmp = new Bitmap(32, 32);
             using var g = Graphics.FromImage(bmp);
             g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
             g.Clear(Color.FromArgb(10, 10, 10));
@@ -157,7 +157,9 @@ namespace VortexTrade
             using var framePen = new Pen(Color.FromArgb(60, 0, 200, 50));
             g.DrawRectangle(framePen, 0, 0, 31, 31);
 
-            return Icon.FromHandle(bmp.GetHicon());
+            var hIcon = bmp.GetHicon();
+            using var temp = Icon.FromHandle(hIcon);
+            return (Icon)temp.Clone();
         }
 
         #endregion
