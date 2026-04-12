@@ -357,6 +357,15 @@ namespace VortexTrade
         private void OceanBlue_Click(object? sender, EventArgs e) => ApplyTheme("Ocean Blue");
         private void VioletNeon_Click(object? sender, EventArgs e) => ApplyTheme("Violet Neon");
 
+        private void ManuelAlimSatimMenu_Click(object? sender, EventArgs e)
+        {
+            var form = new ManualTradeForm(_theme.Background, _theme.Foreground, _theme.Accent)
+            {
+                MdiParent = this
+            };
+            form.Show();
+        }
+
         private void HakkindaMenu_Click(object? sender, EventArgs e)
         {
             using var about = new AboutForm(_theme.Background, _theme.Foreground, _theme.Accent);

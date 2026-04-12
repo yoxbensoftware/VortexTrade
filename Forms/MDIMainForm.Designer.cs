@@ -25,6 +25,8 @@ namespace VortexTrade
             amberTerminal = new ToolStripMenuItem();
             oceanBlue = new ToolStripMenuItem();
             violetNeon = new ToolStripMenuItem();
+            islemMenu = new ToolStripMenuItem();
+            manuelAlimSatimMenu = new ToolStripMenuItem();
             hakkindaMenu = new ToolStripMenuItem();
 
             statusStrip = new StatusStrip();
@@ -44,7 +46,7 @@ namespace VortexTrade
 
             // menuStrip
             menuStrip.Items.AddRange(new ToolStripItem[] {
-                temaMenu, hakkindaMenu });
+                temaMenu, islemMenu, hakkindaMenu });
             menuStrip.Location = new Point(0, 0);
             menuStrip.Name = "menuStrip";
             menuStrip.Padding = new Padding(4, 2, 0, 2);
@@ -75,6 +77,17 @@ namespace VortexTrade
             violetNeon.Name = "violetNeon";
             violetNeon.Text = "Violet Neon";
             violetNeon.Click += VioletNeon_Click;
+
+            // islemMenu
+            islemMenu.DropDownItems.AddRange(new ToolStripItem[] {
+                manuelAlimSatimMenu });
+            islemMenu.Name = "islemMenu";
+            islemMenu.Text = "İşlem";
+
+            // manuelAlimSatimMenu
+            manuelAlimSatimMenu.Name = "manuelAlimSatimMenu";
+            manuelAlimSatimMenu.Text = "Manuel Alım/Satım";
+            manuelAlimSatimMenu.Click += ManuelAlimSatimMenu_Click;
 
             // hakkindaMenu
             hakkindaMenu.Name = "hakkindaMenu";
@@ -155,6 +168,8 @@ namespace VortexTrade
         private ToolStripMenuItem amberTerminal;
         private ToolStripMenuItem oceanBlue;
         private ToolStripMenuItem violetNeon;
+        private ToolStripMenuItem islemMenu;
+        private ToolStripMenuItem manuelAlimSatimMenu;
         private ToolStripMenuItem hakkindaMenu;
         private StatusStrip statusStrip;
         private ToolStripStatusLabel lblRam;

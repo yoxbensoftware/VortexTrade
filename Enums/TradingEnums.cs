@@ -45,4 +45,25 @@ namespace VortexTrade
         W1,
         MN1
     }
+
+    public enum ExchangeType
+    {
+        Binance
+    }
+
+    public enum TimeInForce
+    {
+        GTC,
+        IOC,
+        FOK
+    }
+
+    public enum ScheduledOrderStatus
+    {
+        Pending,
+        Executing,
+        Completed,
+        Failed,
+        Cancelled
+    }
 }
