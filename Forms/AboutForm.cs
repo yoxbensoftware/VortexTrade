@@ -4,6 +4,11 @@ namespace VortexTrade
     {
         public AboutForm(Color bg, Color fg, Color accent)
         {
+            const int leftMargin = 24;
+            const int titleTop = 24;
+            const int versionTop = 86;
+            const int descriptionTop = 122;
+
             Text = $"Hakkında — {AppConstants.AppName}";
             ClientSize = new Size(420, 300);
             StartPosition = FormStartPosition.CenterParent;
@@ -21,7 +26,7 @@ namespace VortexTrade
                 Font = new Font("Consolas", 24f, FontStyle.Bold),
                 ForeColor = accent,
                 AutoSize = true,
-                Location = new Point(24, 24)
+                Location = new Point(leftMargin, titleTop)
             };
 
             var lblVersion = new Label
@@ -30,7 +35,7 @@ namespace VortexTrade
                 Font = new Font("Consolas", 10f),
                 ForeColor = Color.FromArgb(210, fg.R, fg.G, fg.B),
                 AutoSize = true,
-                Location = new Point(24, lblTitle.Bottom + 10)
+                Location = new Point(leftMargin, versionTop)
             };
 
             var lblDesc = new Label
@@ -42,7 +47,7 @@ namespace VortexTrade
                 ForeColor = Color.FromArgb(160, fg.R, fg.G, fg.B),
                 AutoSize = true,
                 MaximumSize = new Size(ClientSize.Width - 48, 0),
-                Location = new Point(24, lblVersion.Bottom + 18)
+                Location = new Point(leftMargin, descriptionTop)
             };
 
             var btnOk = new Button
