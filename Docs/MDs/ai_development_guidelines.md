@@ -39,8 +39,9 @@ Bu dosya, Copilot ve geliştirici tarafından her zaman uyulması gereken temel 
 
 ## 6. Geliştirme Günlüğü (DevLogs)
 
-- **Her geliştirme** sonunda `Docs/DevLogs/` klasöründeki aktif günlük dosyasına kayıt eklenmelidir.
-- Dosya isimlendirme formatı: **`dev_log_DDMMYYYY.md`** (örn: `dev_log_12042026.md`).
+- **Her geliştirme** sonunda `Docs/DevLogs/` klasöründeki günlük dosyaları güncellenmelidir.
+- `Docs/DevLogs/devlog.md` dosyası ana giriş / indeks dosyasıdır.
+- Tarih bazlı günlük dosya isimlendirme formatı: **`dev_log_DDMMYYYY.md`** (örn: `dev_log_12042026.md`).
 - Kayıt formatı:
   - Versiyon
   - Tarih
@@ -56,9 +57,11 @@ Bu dosya, Copilot ve geliştirici tarafından her zaman uyulması gereken temel 
 VortexTrade/
 ├── Constants/       → Sabit değerler
 ├── Docs/            → Dokümantasyon
-│   ├── DevLogs/     → Geliştirme günlükleri (dev_log_DDMMYYYY.md)
-│   ├── ai_development_guidelines.md
-│   └── manifest.md
+│   ├── DevLogs/     → Geliştirme günlükleri (`devlog.md`, `dev_log_DDMMYYYY.md`)
+│   └── MDs/         → Genel markdown dokümanları
+│       ├── ai_development_guidelines.md
+│       ├── manifest.md
+│       └── refactor.md
 ├── Enums/           → Enum tanımları
 ├── Forms/           → Windows Forms dosyaları
 ├── Helpers/         → Yardımcı sınıflar
