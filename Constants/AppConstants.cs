@@ -3,8 +3,8 @@ namespace VortexTrade
     public static class AppConstants
     {
         public const string AppName = "VortexTrade";
-        public const string AppVersion = "0.0.4";
-        public const string AppFullVersion = "V.0.0.4";
+        public const string AppVersion = "0.0.5";
+        public const string AppFullVersion = "V.0.0.5";
         public const string Copyright = "© 2026 VortexTrade";
         public const string Description = "AI Based Trading Terminal";
 
