@@ -26,7 +26,7 @@ namespace VortexTrade
 
             var lblVersion = new Label
             {
-                Text = AppConstants.AppFullVersion,
+                Text = $"Versiyon: {AppConstants.AppFullVersion}",
                 Font = new Font("Consolas", 10f),
                 ForeColor = fg,
                 AutoSize = true,
