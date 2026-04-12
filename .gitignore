@@ -17,3 +17,7 @@ x86/
 # NuGet
 packages/
 *.nupkg
+
+# Installer build artifacts
+Installer/publish/
+Installer/Output/
