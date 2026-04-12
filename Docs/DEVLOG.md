@@ -39,3 +39,20 @@
 - AboutForm AppConstants kullanacak şekilde güncellendi
 - DEVLOG.md geliştirme günlüğü sistemi kuruldu
 - DEVELOPMENT_GUIDELINES.md genişletildi
+
+---
+
+### V.0.0.3 — 2025-07-15
+
+| Alan | Değer |
+|---|---|
+| **Tarih** | 2025-07-15 |
+| **Geliştiren** | GitHub Copilot (AI) |
+| **Bilgisayar** | PCDELL |
+
+**Yapılan Geliştirme:**
+- `Docs/` klasörü oluşturuldu, tüm MD dosyaları bu klasöre taşındı
+- `manifest.md` oluşturuldu — Trading Workbench sistem manifestosu (13 temel modül tanımı)
+- `DEVELOPMENT_GUIDELINES.md` → `Docs/ai_development_guidelines.md` olarak yeniden adlandırıldı
+- `DEVLOG.md` → `Docs/DEVLOG.md` olarak taşındı
+- Versiyon V.0.0.3'e yükseltildi (AppConstants.cs + .csproj)
