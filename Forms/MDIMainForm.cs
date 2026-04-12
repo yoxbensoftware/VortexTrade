@@ -86,7 +86,14 @@ namespace VortexTrade
                 Directory.CreateDirectory(dir);
                 File.WriteAllText(ThemeSettingsPath, themeName);
             }
-            catch { }
+            catch (IOException ex)
+            {
+                Debug.WriteLine($"Theme setting could not be saved: {ex.Message}");
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                Debug.WriteLine($"Theme setting access denied: {ex.Message}");
+            }
         }
 
         private static string LoadThemeSetting()
@@ -99,7 +106,14 @@ namespace VortexTrade
                     if (Themes.ContainsKey(name)) return name;
                 }
             }
-            catch { }
+            catch (IOException ex)
+            {
+                Debug.WriteLine($"Theme setting could not be loaded: {ex.Message}");
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                Debug.WriteLine($"Theme setting access denied: {ex.Message}");
+            }
             return "Matrix Green";
         }
 
@@ -155,20 +169,35 @@ namespace VortexTrade
                 if (c is MdiClient mdi)
                 {
                     _mdiClient = mdi;
-                    var setStyle = typeof(Control).GetMethod(
-                        "SetStyle", BindingFlags.Instance | BindingFlags.NonPublic);
-                    setStyle?.Invoke(_mdiClient, new object[]
-                    {
-                        ControlStyles.UserPaint |
-                        ControlStyles.AllPaintingInWmPaint |
-                        ControlStyles.OptimizedDoubleBuffer,
-                        true
-                    });
+                    EnableOptimizedPainting(_mdiClient);
                     _mdiClient.Paint += MdiClient_Paint;
                     _mdiClient.Resize += (_, _) => _mdiClient.Invalidate();
                     break;
                 }
             }
+        }
+
+        [System.Diagnostics.CodeAnalysis.SuppressMessage(
+            "Major Code Smell",
+            "S3011:Reflection should not be used to increase accessibility of classes, methods, or fields",
+            Justification = "MdiClient does not expose a public API for enabling the required paint styles. This is limited to the framework Control.SetStyle method on the current MDI client instance.")]
+        private static void EnableOptimizedPainting(MdiClient mdiClient)
+        {
+            var setStyle = typeof(Control).GetMethod(
+                "SetStyle", BindingFlags.Instance | BindingFlags.NonPublic);
+
+            if (setStyle is null)
+            {
+                return;
+            }
+
+            setStyle.Invoke(mdiClient, new object[]
+            {
+                ControlStyles.UserPaint |
+                ControlStyles.AllPaintingInWmPaint |
+                ControlStyles.OptimizedDoubleBuffer,
+                true
+            });
         }
 
         private void MdiClient_Paint(object? sender, PaintEventArgs e)
@@ -236,7 +265,14 @@ namespace VortexTrade
                     }
                 }
             }
-            catch { }
+            catch (NetworkInformationException ex)
+            {
+                Debug.WriteLine($"Network counters could not be read: {ex.Message}");
+            }
+            catch (PlatformNotSupportedException ex)
+            {
+                Debug.WriteLine($"Network counters are not supported: {ex.Message}");
+            }
         }
 
         private void MonitorTimer_Tick(object? sender, EventArgs e)
@@ -267,10 +303,20 @@ namespace VortexTrade
             lblUptime.Text = $"Uptime: {(int)t.TotalHours:D2}:{t.Minutes:D2}:{t.Seconds:D2}";
         }
 
-        private static string FormatBytes(long b) =>
-            b < 1024 ? $"{b} B" :
-            b < 1048576 ? $"{b / 1024.0:F1} KB" :
-            $"{b / 1048576.0:F1} MB";
+        private static string FormatBytes(long b)
+        {
+            if (b < 1024)
+            {
+                return $"{b} B";
+            }
+
+            if (b < 1048576)
+            {
+                return $"{b / 1024.0:F1} KB";
+            }
+
+            return $"{b / 1048576.0:F1} MB";
+        }
 
         private void ApplyTheme(string name)
         {
@@ -278,8 +324,13 @@ namespace VortexTrade
             _theme = t;
 
             foreach (ToolStripItem item in temaMenu.DropDownItems)
-                if (item is ToolStripMenuItem mi && Themes.ContainsKey(mi.Text))
-                    mi.Checked = mi.Text == name;
+            {
+                if (item is ToolStripMenuItem { Text: { Length: > 0 } menuText } mi &&
+                    Themes.ContainsKey(menuText))
+                {
+                    mi.Checked = menuText == name;
+                }
+            }
 
             var renderer = new RetroRenderer(t);
             menuStrip.Renderer = renderer;
