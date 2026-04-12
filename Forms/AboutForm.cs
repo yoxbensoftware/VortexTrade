@@ -4,7 +4,7 @@ namespace VortexTrade
     {
         public AboutForm(Color bg, Color fg, Color accent)
         {
-            Text = "Hakkında — VortexTrade";
+            Text = $"Hakkında — {AppConstants.AppName}";
             ClientSize = new Size(420, 300);
             StartPosition = FormStartPosition.CenterParent;
             FormBorderStyle = FormBorderStyle.FixedDialog;
@@ -17,7 +17,7 @@ namespace VortexTrade
 
             var lblTitle = new Label
             {
-                Text = "VortexTrade",
+                Text = AppConstants.AppName,
                 Font = new Font("Consolas", 26f, FontStyle.Bold),
                 ForeColor = accent,
                 AutoSize = true,
@@ -26,7 +26,7 @@ namespace VortexTrade
 
             var lblVersion = new Label
             {
-                Text = "v1.0.0",
+                Text = AppConstants.AppFullVersion,
                 Font = new Font("Consolas", 10f),
                 ForeColor = fg,
                 AutoSize = true,
@@ -35,8 +35,8 @@ namespace VortexTrade
 
             var lblDesc = new Label
             {
-                Text = "AI Based Trading Terminal\n\n"
-                     + "© 2026 VortexTrade\n"
+                Text = $"{AppConstants.Description}\n\n"
+                     + $"{AppConstants.Copyright}\n"
                      + "Tüm hakları saklıdır.",
                 Font = new Font("Consolas", 9f),
                 ForeColor = Color.FromArgb(160, fg.R, fg.G, fg.B),
