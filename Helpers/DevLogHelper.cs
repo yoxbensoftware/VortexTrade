@@ -2,26 +2,52 @@ namespace VortexTrade
 {
     public static class DevLogHelper
     {
-        private static readonly string LogDirectory =
-            Path.GetDirectoryName(typeof(DevLogHelper).Assembly.Location) ?? ".";
+        private static readonly string LogHeader =
+            $"# {AppConstants.AppName} — Geliştirme Günlüğü\n\n" +
+            "> Bu dosya 10 MB'ı aştığında yeni bir tarihli dosya oluşturulur.\n";
 
         public static void AppendEntry(DevLogEntry entry, string? logDirectory = null)
         {
-            var dir = logDirectory ?? LogDirectory;
-            var logPath = Path.Combine(dir, AppConstants.DevLogFileName);
+            var dir = logDirectory
+                ?? Path.GetDirectoryName(typeof(DevLogHelper).Assembly.Location)
+                ?? ".";
 
-            RotateIfNeeded(logPath, dir);
+            var devLogsDir = Path.Combine(dir, AppConstants.DevLogDirectory);
+            Directory.CreateDirectory(devLogsDir);
 
+            var targetFile = GetActiveLogFile(devLogsDir);
             var content = FormatEntry(entry);
 
-            if (!File.Exists(logPath))
+            if (!File.Exists(targetFile))
             {
-                File.WriteAllText(logPath, $"# {AppConstants.AppName} — Geliştirme Günlüğü\n\n{content}");
+                File.WriteAllText(targetFile, LogHeader + content);
             }
             else
             {
-                File.AppendAllText(logPath, content);
+                File.AppendAllText(targetFile, content);
             }
+        }
+
+        public static string GetActiveLogFile(string devLogsDir)
+        {
+            var existing = Directory.GetFiles(devLogsDir,
+                $"{AppConstants.DevLogFilePrefix}*{AppConstants.DevLogFileExtension}")
+                .OrderByDescending(f => f)
+                .FirstOrDefault();
+
+            if (existing != null)
+            {
+                var fileInfo = new FileInfo(existing);
+                if (fileInfo.Length < AppConstants.DevLogMaxSizeBytes)
+                    return existing;
+            }
+
+            return Path.Combine(devLogsDir, GenerateFileName(DateTime.Now));
+        }
+
+        public static string GenerateFileName(DateTime date)
+        {
+            return $"{AppConstants.DevLogFilePrefix}{date.ToString(AppConstants.DevLogDateFormat)}{AppConstants.DevLogFileExtension}";
         }
 
         private static string FormatEntry(DevLogEntry entry)
@@ -42,27 +68,6 @@ namespace VortexTrade
                 {entry.Description}
 
                 """;
-        }
-
-        private static void RotateIfNeeded(string logPath, string directory)
-        {
-            if (!File.Exists(logPath))
-                return;
-
-            var fileInfo = new FileInfo(logPath);
-            if (fileInfo.Length < AppConstants.DevLogMaxSizeBytes)
-                return;
-
-            var archiveIndex = 1;
-            string archivePath;
-            do
-            {
-                archivePath = Path.Combine(directory,
-                    $"DEVLOG_archive_{archiveIndex:D3}.md");
-                archiveIndex++;
-            } while (File.Exists(archivePath));
-
-            File.Move(logPath, archivePath);
         }
     }
 }
