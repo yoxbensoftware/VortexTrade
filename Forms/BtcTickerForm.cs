@@ -110,13 +110,12 @@ namespace VortexTrade
                 Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right
             };
 
-            _listView.Columns.Add("Borsa", 130);
+            _listView.Columns.Add("Borsa", 140);
             _listView.Columns.Add("Çift", 110);
-            _listView.Columns.Add("Son Fiyat", 120, HorizontalAlignment.Right);
-            _listView.Columns.Add("USD Fiyat", 110, HorizontalAlignment.Right);
-            _listView.Columns.Add("Hacim (BTC)", 100, HorizontalAlignment.Right);
-            _listView.Columns.Add("Hacim (USD)", 120, HorizontalAlignment.Right);
-            _listView.Columns.Add("Spread %", 80, HorizontalAlignment.Right);
+            _listView.Columns.Add("Fiyat", 130, HorizontalAlignment.Right);
+            _listView.Columns.Add("USD Fiyat", 130, HorizontalAlignment.Right);
+            _listView.Columns.Add("Hacim (BTC)", 120, HorizontalAlignment.Right);
+            _listView.Columns.Add("Hacim (USD)", 140, HorizontalAlignment.Right);
             _listView.Columns.Add("Son İşlem", 140);
 
             Controls.Add(_listView);
@@ -124,7 +123,7 @@ namespace VortexTrade
             y = _listView.Bottom + 5;
             _lblLastUpdate = new Label
             {
-                Text = "Son güncelleme: —  |  Veri: CoinGecko (ücretsiz API)",
+                Text = "Son güncelleme: —  |  Veri: CoinLore API",
                 Location = new Point(15, y),
                 ForeColor = Color.FromArgb(120, fg.R, fg.G, fg.B),
                 AutoSize = true,
@@ -132,13 +131,13 @@ namespace VortexTrade
             };
             Controls.Add(_lblLastUpdate);
 
-            // ── Auto-refresh timer (30 sec — CoinGecko rate limit friendly) ──
-            _autoRefreshTimer = new System.Windows.Forms.Timer { Interval = 30_000 };
+            // ── Auto-refresh timer (10 sec) ──
+            _autoRefreshTimer = new System.Windows.Forms.Timer { Interval = 10_000 };
             _autoRefreshTimer.Tick += async (_, _) => await LoadTickersAsync();
 
             Load += async (_, _) =>
             {
-                _marketService = new CoinGeckoMarketDataService();
+                _marketService = new CoinLoreMarketDataService();
                 await LoadTickersAsync();
                 _autoRefreshTimer.Start();
             };
@@ -161,26 +160,27 @@ namespace VortexTrade
                 ApplyFilter();
 
                 _lblLastUpdate.Text =
-                    $"Son güncelleme: {DateTime.Now:HH:mm:ss} | {_allTickers.Count} BTC çifti";
-                _lblStatus.Text = "✓ Güncellendi";
+                    $"Son güncelleme: {DateTime.Now:HH:mm:ss} | {_allTickers.Count} BTC çifti | CoinLore";
+                _lblStatus.Text = "✓ OK";
                 _lblStatus.ForeColor = Color.FromArgb(0, 220, 60);
             }
             catch (HttpRequestException ex)
             {
-                _lblStatus.Text = $"✗ Ağ hatası";
+                var detail = ex.InnerException?.Message ?? ex.Message;
+                _lblStatus.Text = $"✗ Ağ: {Truncate(detail, 60)}";
                 _lblStatus.ForeColor = Color.FromArgb(220, 50, 50);
-                System.Diagnostics.Debug.WriteLine($"Ticker fetch error: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Ticker HTTP error: {ex}");
             }
             catch (TaskCanceledException)
             {
-                _lblStatus.Text = "✗ Zaman aşımı";
+                _lblStatus.Text = "✗ Zaman aşımı (30sn)";
                 _lblStatus.ForeColor = Color.FromArgb(220, 50, 50);
             }
             catch (Exception ex)
             {
-                _lblStatus.Text = "✗ Hata";
+                _lblStatus.Text = $"✗ {Truncate(ex.Message, 60)}";
                 _lblStatus.ForeColor = Color.FromArgb(220, 50, 50);
-                System.Diagnostics.Debug.WriteLine($"Ticker error: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Ticker error: {ex}");
             }
             finally
             {
@@ -188,6 +188,9 @@ namespace VortexTrade
                 _btnRefresh.Enabled = true;
             }
         }
+
+        private static string Truncate(string text, int max) =>
+            text.Length <= max ? text : string.Concat(text.AsSpan(0, max), "…");
 
         private void ApplyFilter()
         {
@@ -225,6 +228,8 @@ namespace VortexTrade
             _listView.BeginUpdate();
             _listView.Items.Clear();
 
+            var green = Color.FromArgb(0, 220, 60);
+
             foreach (var t in tickers)
             {
                 var pair = $"{t.Base}/{t.Target}";
@@ -237,22 +242,17 @@ namespace VortexTrade
 
                 item.SubItems.Add(pair);
                 item.SubItems.Add(FormatPrice(t.LastPrice));
-                item.SubItems.Add(FormatPrice(t.UsdPrice));
+                item.SubItems.Add($"${FormatPrice(t.UsdPrice)}");
                 item.SubItems.Add(FormatVolume(t.Volume));
-                item.SubItems.Add(FormatVolume(t.UsdVolume));
-                item.SubItems.Add(t.SpreadPercent > 0
-                    ? $"{t.SpreadPercent:F3}%"
-                    : "—");
+                item.SubItems.Add($"${FormatVolume(t.UsdVolume)}");
                 item.SubItems.Add(t.LastTraded.ToString("HH:mm:ss dd/MM"));
 
-                // Color pair column by target
+                // USDT pairs green, others accent
                 item.SubItems[1].ForeColor = t.Target.Equals("USDT", StringComparison.OrdinalIgnoreCase)
-                    ? Color.FromArgb(0, 220, 60)
-                    : _accent;
+                    ? green : _accent;
 
-                // High spread warning
-                if (t.SpreadPercent > 1m)
-                    item.SubItems[6].ForeColor = Color.FromArgb(220, 50, 50);
+                // USD price green
+                item.SubItems[3].ForeColor = green;
 
                 _listView.Items.Add(item);
             }
