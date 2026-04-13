@@ -1,11 +1,14 @@
 namespace VortexTrade
 {
     public sealed record TickerInfo(
-        string Symbol,
+        string Exchange,
+        string Base,
+        string Target,
         decimal LastPrice,
-        decimal PriceChangePercent,
-        decimal HighPrice,
-        decimal LowPrice,
+        decimal UsdPrice,
         decimal Volume,
-        decimal QuoteVolume);
+        decimal UsdVolume,
+        decimal SpreadPercent,
+        string TradeUrl,
+        DateTime LastTraded);
 }
