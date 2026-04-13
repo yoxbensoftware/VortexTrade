@@ -27,6 +27,7 @@ namespace VortexTrade
             violetNeon = new ToolStripMenuItem();
             islemMenu = new ToolStripMenuItem();
             manuelAlimSatimMenu = new ToolStripMenuItem();
+            btcTickerMenu = new ToolStripMenuItem();
             hakkindaMenu = new ToolStripMenuItem();
 
             statusStrip = new StatusStrip();
@@ -80,7 +81,7 @@ namespace VortexTrade
 
             // islemMenu
             islemMenu.DropDownItems.AddRange(new ToolStripItem[] {
-                manuelAlimSatimMenu });
+                manuelAlimSatimMenu, btcTickerMenu });
             islemMenu.Name = "islemMenu";
             islemMenu.Text = "İşlem";
 
@@ -88,6 +89,11 @@ namespace VortexTrade
             manuelAlimSatimMenu.Name = "manuelAlimSatimMenu";
             manuelAlimSatimMenu.Text = "Manuel Alım/Satım";
             manuelAlimSatimMenu.Click += ManuelAlimSatimMenu_Click;
+
+            // btcTickerMenu
+            btcTickerMenu.Name = "btcTickerMenu";
+            btcTickerMenu.Text = "BTC Piyasaları (Canlı)";
+            btcTickerMenu.Click += BtcTickerMenu_Click;
 
             // hakkindaMenu
             hakkindaMenu.Name = "hakkindaMenu";
@@ -170,6 +176,7 @@ namespace VortexTrade
         private ToolStripMenuItem violetNeon;
         private ToolStripMenuItem islemMenu;
         private ToolStripMenuItem manuelAlimSatimMenu;
+        private ToolStripMenuItem btcTickerMenu;
         private ToolStripMenuItem hakkindaMenu;
         private StatusStrip statusStrip;
         private ToolStripStatusLabel lblRam;

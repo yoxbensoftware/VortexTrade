@@ -368,6 +368,15 @@ namespace VortexTrade
             form.Show();
         }
 
+        private void BtcTickerMenu_Click(object? sender, EventArgs e)
+        {
+            var form = new BtcTickerForm(_theme.Background, _theme.Foreground, _theme.Accent)
+            {
+                MdiParent = this
+            };
+            form.Show();
+        }
+
         private void HakkindaMenu_Click(object? sender, EventArgs e)
         {
             using var about = new AboutForm(_theme.Background, _theme.Foreground, _theme.Accent);
