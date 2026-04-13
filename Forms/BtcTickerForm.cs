@@ -11,14 +11,13 @@ namespace VortexTrade
         private readonly ListView _listView;
         private readonly Label _lblStatus;
         private readonly Label _lblLastUpdate;
+        private readonly Label _lblProvider;
         private readonly Button _btnRefresh;
         private readonly ComboBox _cmbFilter;
         private readonly TextBox _txtSearch;
-        private readonly System.Windows.Forms.Timer _autoRefreshTimer;
 
-        private IMarketDataService? _marketService;
-        private IReadOnlyList<TickerInfo> _allTickers = [];
-        private bool _isLoading;
+        private IMarketDataStream? _stream;
+        private IReadOnlyList<MarketTicker> _allTickers = [];
 
         public BtcTickerForm(Color bg, Color fg, Color accent)
         {
@@ -81,7 +80,7 @@ namespace VortexTrade
             Controls.Add(_txtSearch);
 
             _btnRefresh = CreateButton("⟳ Yenile", 420, y, 100);
-            _btnRefresh.Click += async (_, _) => await LoadTickersAsync();
+            _btnRefresh.Click += async (_, _) => await RestartStreamAsync();
             Controls.Add(_btnRefresh);
 
             _lblStatus = new Label
@@ -98,7 +97,7 @@ namespace VortexTrade
             _listView = new ListView
             {
                 Location = new Point(15, y),
-                Size = new Size(910, 520),
+                Size = new Size(910, 510),
                 View = View.Details,
                 FullRowSelect = true,
                 GridLines = true,
@@ -110,20 +109,20 @@ namespace VortexTrade
                 Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right
             };
 
-            _listView.Columns.Add("Borsa", 140);
-            _listView.Columns.Add("Çift", 110);
+            _listView.Columns.Add("Borsa", 130);
+            _listView.Columns.Add("Çift", 100);
             _listView.Columns.Add("Fiyat", 130, HorizontalAlignment.Right);
             _listView.Columns.Add("USD Fiyat", 130, HorizontalAlignment.Right);
             _listView.Columns.Add("Hacim (BTC)", 120, HorizontalAlignment.Right);
             _listView.Columns.Add("Hacim (USD)", 140, HorizontalAlignment.Right);
-            _listView.Columns.Add("Son İşlem", 140);
+            _listView.Columns.Add("Son İşlem", 130);
 
             Controls.Add(_listView);
 
             y = _listView.Bottom + 5;
             _lblLastUpdate = new Label
             {
-                Text = "Son güncelleme: —  |  Veri: CoinLore API",
+                Text = "Son güncelleme: —",
                 Location = new Point(15, y),
                 ForeColor = Color.FromArgb(120, fg.R, fg.G, fg.B),
                 AutoSize = true,
@@ -131,62 +130,76 @@ namespace VortexTrade
             };
             Controls.Add(_lblLastUpdate);
 
-            // ── Auto-refresh timer (10 sec) ──
-            _autoRefreshTimer = new System.Windows.Forms.Timer { Interval = 10_000 };
-            _autoRefreshTimer.Tick += async (_, _) => await LoadTickersAsync();
-
-            Load += async (_, _) =>
+            _lblProvider = new Label
             {
-                _marketService = new CoinLoreMarketDataService();
-                await LoadTickersAsync();
-                _autoRefreshTimer.Start();
+                Text = "Kaynak: bekleniyor...",
+                Location = new Point(400, y),
+                ForeColor = Color.FromArgb(120, fg.R, fg.G, fg.B),
+                AutoSize = true,
+                Anchor = AnchorStyles.Bottom | AnchorStyles.Left
             };
+            Controls.Add(_lblProvider);
+
+            Load += async (_, _) => await StartStreamAsync();
 
             ResumeLayout(false);
         }
 
-        private async Task LoadTickersAsync()
+        private async Task StartStreamAsync()
         {
-            if (_isLoading || _marketService is null) return;
-            _isLoading = true;
-
-            _lblStatus.Text = "⏳ Yükleniyor...";
+            _lblStatus.Text = "⏳ Bağlanıyor...";
             _lblStatus.ForeColor = _accent;
+
+            _stream = new MarketDataStream(
+            [
+                new BinanceMarketDataProvider(),
+                new CoinLoreMarketDataProvider()
+            ]);
+
+            _stream.DataReceived += OnDataReceived;
+            _stream.ErrorOccurred += OnErrorOccurred;
+            _stream.ProviderChanged += OnProviderChanged;
+
+            await _stream.StartAsync("BTC", TimeSpan.FromSeconds(10));
+        }
+
+        private async Task RestartStreamAsync()
+        {
             _btnRefresh.Enabled = false;
+            _stream?.Stop();
+            _stream?.Dispose();
+            _stream = null;
+            await StartStreamAsync();
+            _btnRefresh.Enabled = true;
+        }
 
-            try
-            {
-                _allTickers = await _marketService.GetBtcTickersAsync();
-                ApplyFilter();
+        private void OnDataReceived(object? sender, MarketDataEventArgs e)
+        {
+            _allTickers = e.Tickers;
+            ApplyFilter();
 
-                _lblLastUpdate.Text =
-                    $"Son güncelleme: {DateTime.Now:HH:mm:ss} | {_allTickers.Count} BTC çifti | CoinLore";
-                _lblStatus.Text = "✓ OK";
-                _lblStatus.ForeColor = Color.FromArgb(0, 220, 60);
-            }
-            catch (HttpRequestException ex)
-            {
-                var detail = ex.InnerException?.Message ?? ex.Message;
-                _lblStatus.Text = $"✗ Ağ: {Truncate(detail, 60)}";
-                _lblStatus.ForeColor = Color.FromArgb(220, 50, 50);
-                System.Diagnostics.Debug.WriteLine($"Ticker HTTP error: {ex}");
-            }
-            catch (TaskCanceledException)
-            {
-                _lblStatus.Text = "✗ Zaman aşımı (30sn)";
-                _lblStatus.ForeColor = Color.FromArgb(220, 50, 50);
-            }
-            catch (Exception ex)
-            {
-                _lblStatus.Text = $"✗ {Truncate(ex.Message, 60)}";
-                _lblStatus.ForeColor = Color.FromArgb(220, 50, 50);
-                System.Diagnostics.Debug.WriteLine($"Ticker error: {ex}");
-            }
-            finally
-            {
-                _isLoading = false;
-                _btnRefresh.Enabled = true;
-            }
+            _lblLastUpdate.Text =
+                $"Son güncelleme: {DateTime.Now:HH:mm:ss} | {_allTickers.Count} çift";
+            _lblStatus.Text = "✓ CANLI";
+            _lblStatus.ForeColor = Color.FromArgb(0, 220, 60);
+        }
+
+        private void OnErrorOccurred(object? sender, MarketDataErrorEventArgs e)
+        {
+            var detail = e.Exception is HttpRequestException httpEx
+                ? httpEx.InnerException?.Message ?? httpEx.Message
+                : e.Exception.Message;
+
+            _lblStatus.Text = $"✗ {e.ProviderName}: {Truncate(detail, 50)}";
+            _lblStatus.ForeColor = Color.FromArgb(220, 50, 50);
+            System.Diagnostics.Debug.WriteLine($"[BtcTickerForm] {e.ProviderName} hata: {e.Exception}");
+        }
+
+        private void OnProviderChanged(object? sender, string providerName)
+        {
+            _lblProvider.Text = $"Kaynak: {providerName}";
+            _lblProvider.ForeColor = _accent;
+            System.Diagnostics.Debug.WriteLine($"[BtcTickerForm] Provider değişti: {providerName}");
         }
 
         private static string Truncate(string text, int max) =>
@@ -198,17 +211,17 @@ namespace VortexTrade
 
             switch (_cmbFilter.SelectedIndex)
             {
-                case 1: // USDT pairs
+                case 1:
                     filtered = filtered.Where(t =>
-                        t.Target.Equals("USDT", StringComparison.OrdinalIgnoreCase));
+                        t.QuoteCurrency.Equals("USDT", StringComparison.OrdinalIgnoreCase));
                     break;
-                case 2: // USD pairs
+                case 2:
                     filtered = filtered.Where(t =>
-                        t.Target.Equals("USD", StringComparison.OrdinalIgnoreCase));
+                        t.QuoteCurrency.Equals("USD", StringComparison.OrdinalIgnoreCase));
                     break;
-                case 3: // EUR pairs
+                case 3:
                     filtered = filtered.Where(t =>
-                        t.Target.Equals("EUR", StringComparison.OrdinalIgnoreCase));
+                        t.QuoteCurrency.Equals("EUR", StringComparison.OrdinalIgnoreCase));
                     break;
             }
 
@@ -217,13 +230,13 @@ namespace VortexTrade
             {
                 filtered = filtered.Where(t =>
                     t.Exchange.Contains(search, StringComparison.OrdinalIgnoreCase) ||
-                    t.Target.Contains(search, StringComparison.OrdinalIgnoreCase));
+                    t.QuoteCurrency.Contains(search, StringComparison.OrdinalIgnoreCase));
             }
 
             PopulateListView(filtered.ToList());
         }
 
-        private void PopulateListView(IReadOnlyList<TickerInfo> tickers)
+        private void PopulateListView(IReadOnlyList<MarketTicker> tickers)
         {
             _listView.BeginUpdate();
             _listView.Items.Clear();
@@ -232,7 +245,7 @@ namespace VortexTrade
 
             foreach (var t in tickers)
             {
-                var pair = $"{t.Base}/{t.Target}";
+                var pair = $"{t.BaseCurrency}/{t.QuoteCurrency}";
                 var item = new ListViewItem(t.Exchange)
                 {
                     UseItemStyleForSubItems = false,
@@ -241,17 +254,15 @@ namespace VortexTrade
                 };
 
                 item.SubItems.Add(pair);
-                item.SubItems.Add(FormatPrice(t.LastPrice));
-                item.SubItems.Add($"${FormatPrice(t.UsdPrice)}");
+                item.SubItems.Add(FormatPrice(t.Price));
+                item.SubItems.Add($"${FormatPrice(t.PriceUsd)}");
                 item.SubItems.Add(FormatVolume(t.Volume));
-                item.SubItems.Add($"${FormatVolume(t.UsdVolume)}");
+                item.SubItems.Add($"${FormatVolume(t.VolumeUsd)}");
                 item.SubItems.Add(t.LastTraded.ToString("HH:mm:ss dd/MM"));
 
-                // USDT pairs green, others accent
-                item.SubItems[1].ForeColor = t.Target.Equals("USDT", StringComparison.OrdinalIgnoreCase)
+                item.SubItems[1].ForeColor = t.QuoteCurrency.Equals("USDT", StringComparison.OrdinalIgnoreCase)
                     ? green : _accent;
 
-                // USD price green
                 item.SubItems[3].ForeColor = green;
 
                 _listView.Items.Add(item);
@@ -321,9 +332,8 @@ namespace VortexTrade
         {
             if (disposing)
             {
-                _autoRefreshTimer.Stop();
-                _autoRefreshTimer.Dispose();
-                _marketService?.Dispose();
+                _stream?.Stop();
+                _stream?.Dispose();
             }
             base.Dispose(disposing);
         }
