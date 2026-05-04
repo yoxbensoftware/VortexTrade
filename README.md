@@ -8,12 +8,12 @@
   <img src="https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge" />
 </p>
 
-> **Retro temalı, MDI tabanlı kripto para trading terminali.**  
-> Gerçek zamanlı piyasa verisi, SOLID mimari, Binance entegrasyonu.
+> **A retro-themed, MDI-based cryptocurrency trading terminal.**  
+> Real-time market data, SOLID architecture, Binance integration.
 
 ---
 
-## 📸 Ekran Görüntüleri
+## 📸 Screenshots
 
 | Matrix Green | Amber Terminal |
 |---|---|
@@ -23,97 +23,97 @@
 |---|---|
 | ![Ocean](.github/assets/ocean.png) | ![Violet](.github/assets/violet.png) |
 
-> *Ekran görüntüleri eklenecek.*
+> *Screenshots will be added.*
 
 ---
 
-## ✨ Özellikler
+## ✨ Features
 
-### 🎨 Temalar
-- **Matrix Green** — Klasik hacker terminali
-- **Amber Terminal** — Retro sarı-turuncu
-- **Ocean Blue** — Derin mavi
-- **Violet Neon** — Mor neon
+### 🎨 Themes
+- **Matrix Green** — Classic hacker terminal
+- **Amber Terminal** — Retro yellow-orange
+- **Ocean Blue** — Deep blue
+- **Violet Neon** — Purple neon
 
-Seçilen tema `%LocalAppData%\VortexTrade\theme.txt` dosyasına kaydedilir, uygulama yeniden başlatıldığında hatırlanır.
+The selected theme is saved to `%LocalAppData%\VortexTrade\theme.txt` and restored on next launch.
 
-### 📊 Anlık BTC Piyasaları
-- Tüm borsalardaki BTC işlem çiftlerini listeler
-- **Otomatik 10 saniyede bir yenileme**
-- Filtre: Tümü / USDT / USD / EUR çiftleri
-- Borsa veya parite ile arama
-- Hacme göre sıralama (en yüksek önce)
-- **Aktif veri kaynağı ekranda gösterilir**
+### 📊 Live BTC Markets
+- Lists BTC trading pairs across all exchanges
+- **Auto-refresh every 10 seconds**
+- Filter: All / USDT / USD / EUR pairs
+- Search by exchange name or quote currency
+- Sorted by volume (highest first)
+- **Active data source is displayed on screen**
 
-### 🔄 Akıllı Veri Kaynağı (Provider Fallback)
-| Öncelik | Sağlayıcı | Durum |
+### 🔄 Smart Provider Fallback
+| Priority | Provider | Status |
 |---|---|---|
-| 1 | **Binance** `api.binance.com/api/v3/ticker/24hr` | Türkiye'den engelli — VPN ile çalışır |
-| 2 | **CoinLore** `api.coinlore.net/api/coin/markets` | Her koşulda çalışır, API key yok |
+| 1 | **Binance** `api.binance.com/api/v3/ticker/24hr` | Blocked in Turkey — works via VPN |
+| 2 | **CoinLore** `api.coinlore.net/api/coin/markets` | Always available, no API key required |
 
-Binance erişilemezse sistem otomatik olarak CoinLore'a geçer. 3 ardışık hatada provider değişimi otomatik tetiklenir.
+If Binance is unreachable, the system automatically switches to CoinLore. After 3 consecutive errors, provider failover is triggered automatically.
 
-### 💹 Manuel Alım/Satım (Binance)
-- HMAC-SHA256 imzalı Binance REST API entegrasyonu
-- Bağlantı testi
-- Anlık emir (Market / Limit)
-- Zamanlanmış emir desteği
+### 💹 Manual Trading (Binance)
+- HMAC-SHA256 signed Binance REST API integration
+- Connection test
+- Instant orders (Market / Limit)
+- Scheduled order support
 
-### 🖥️ Sistem İzleme
-Status bar'da gerçek zamanlı:
-- RAM kullanımı
-- CPU kullanımı
-- Thread sayısı
+### 🖥️ System Monitoring
+Real-time status bar showing:
+- RAM usage
+- CPU usage
+- Thread count
 - Network I/O
 - Uptime
 
 ---
 
-## 🏗️ Mimari
+## 🏗️ Architecture
 
 ```
 VortexTrade/
-├── Constants/              # AppConstants (versiyon, sabitler)
+├── Constants/              # AppConstants (version, app-wide constants)
 ├── Enums/                  # TradingEnums, ThemeType
 ├── Forms/                  # MDIMainForm, BtcTickerForm, ManualTradeForm, AboutForm
 ├── Helpers/                # DevLogHelper
-├── Models/                 # MarketTicker, TickerInfo, OrderRequest/Result vb.
+├── Models/                 # MarketTicker, TickerInfo, OrderRequest/Result, etc.
 ├── Services/
-│   ├── Interfaces/         # IMarketDataProvider, IMarketDataStream, IExchange vb.
+│   ├── Interfaces/         # IMarketDataProvider, IMarketDataStream, IExchange, etc.
 │   ├── Exchanges/          # BinanceExchange (HMAC-SHA256)
 │   └── MarketData/         # MarketDataStream, BinanceMarketDataProvider, CoinLoreMarketDataProvider
-├── Installer/              # InnoSetup betiği + build scripti
+├── Installer/              # InnoSetup script + build script
 └── Docs/
-    ├── MDs/                # Proje dökümanları, manifest, guidelines
-    └── DevLogs/            # Tarih bazlı geliştirme günlükleri
+    ├── MDs/                # Project docs, manifest, guidelines
+    └── DevLogs/            # Date-based development logs
 ```
 
-### SOLID Piyasa Verisi Altyapısı
+### SOLID Market Data Infrastructure
 
 ```
-IMarketDataProvider          ← Tek seferlik veri çekme
+IMarketDataProvider          ← Single fetch responsibility
     ├── BinanceMarketDataProvider
     └── CoinLoreMarketDataProvider
 
-IMarketDataStream            ← Sürekli veri akışı (event-based)
+IMarketDataStream            ← Continuous data stream (event-based)
     └── MarketDataStream     ← Polling engine, fallback, SynchronizationContext
 
-BtcTickerForm                ← IMarketDataStream'e abone (observer)
-AnalysisEngine (gelecek)     ← IMarketDataStream'e abone
-StrategyEngine (gelecek)     ← IMarketDataStream'e abone
+BtcTickerForm                ← Subscribes to IMarketDataStream (observer)
+AnalysisEngine (planned)     ← Subscribes to IMarketDataStream
+StrategyEngine (planned)     ← Subscribes to IMarketDataStream
 ```
 
-Yeni bir borsa veya veri kaynağı eklemek için tek yapılacak: `IMarketDataProvider` implemente et, `MarketDataStream` listesine ekle.
+Adding a new exchange or data source requires only implementing `IMarketDataProvider` and adding it to the `MarketDataStream` provider list.
 
 ---
 
-## 🚀 Kurulum
+## 🚀 Getting Started
 
-### Gereksinimler
+### Requirements
 - Windows 10/11 (64-bit)
-- .NET 10 Runtime veya daha yenisi
+- .NET 10 Runtime or later
 
-### Kaynak Koddan Derleme
+### Build from Source
 
 ```powershell
 git clone https://github.com/yoxbensoftware/VortexTrade.git
@@ -129,24 +129,24 @@ cd Installer
 .\build-installer.ps1
 ```
 
-> InnoSetup 6 kurulu olmalıdır. Script `publish/` altında self-contained tek dosya üretir ve `Output/VortexTradeSetup.exe` oluşturur.
+> Requires InnoSetup 6. The script produces a self-contained single-file executable under `publish/` and generates `Output/VortexTradeSetup.exe`.
 
 ---
 
-## ⚙️ Binance API Kurulumu (Manuel Alım/Satım için)
+## ⚙️ Binance API Setup (for Manual Trading)
 
-1. [Binance](https://www.binance.com) hesabında **API Management** bölümüne git
-2. Yeni API key oluştur, **Spot Trading** iznini ver
-3. Güvenlik için IP kısıtlaması önerilir
-4. VortexTrade → Manuel Alım/Satım ekranına API Key ve Secret'ı gir
+1. Go to **API Management** in your [Binance](https://www.binance.com) account
+2. Create a new API key and enable **Spot Trading** permission
+3. Restrict access to trusted IPs for security
+4. Enter your API Key and Secret in VortexTrade → Manual Trading screen
 
-> ⚠️ **Not:** Türkiye'den Binance API'ye bağlantı BDDK/SPK düzenlemeleri kapsamında engellenmektedir. Piyasa verisi ekranı bu durumda otomatik olarak CoinLore API'ye geçer.
+> ⚠️ **Note:** Direct access to the Binance API from Turkey is geo-blocked due to local financial regulations. The market data screen automatically falls back to CoinLore API in this case.
 
 ---
 
-## 🔧 Geliştirme
+## 🔧 Development
 
-### Yeni Provider Ekleme
+### Adding a New Provider
 
 ```csharp
 public sealed class MyExchangeProvider : IMarketDataProvider
@@ -155,56 +155,56 @@ public sealed class MyExchangeProvider : IMarketDataProvider
 
     public async Task<bool> IsAvailableAsync(CancellationToken ct = default)
     {
-        // Ping veya basit endpoint kontrolü
+        // Ping or lightweight endpoint check
     }
 
     public async Task<IReadOnlyList<MarketTicker>> GetTickersAsync(
         string coinId, CancellationToken ct = default)
     {
-        // Veri çek, MarketTicker listesi döndür
+        // Fetch data and return a list of MarketTicker
     }
 
-    public void Dispose() { /* HttpClient dispose */ }
+    public void Dispose() { /* dispose HttpClient */ }
 }
 ```
 
-Sonra `BtcTickerForm` veya herhangi bir consumer'da:
+Then in any consumer (form, analysis engine, strategy):
 
 ```csharp
 var stream = new MarketDataStream([
     new BinanceMarketDataProvider(),
-    new MyExchangeProvider(),       // Binance başarısız olursa buraya geçer
+    new MyExchangeProvider(),        // Fallback if Binance fails
     new CoinLoreMarketDataProvider()
 ]);
 
-stream.DataReceived += (_, e) => Console.WriteLine($"{e.Tickers.Count} ticker alındı ({e.ProviderName})");
-stream.ProviderChanged += (_, name) => Console.WriteLine($"Aktif provider: {name}");
+stream.DataReceived  += (_, e) => Console.WriteLine($"{e.Tickers.Count} tickers received ({e.ProviderName})");
+stream.ProviderChanged += (_, name) => Console.WriteLine($"Active provider: {name}");
 
 await stream.StartAsync("BTC", TimeSpan.FromSeconds(10));
 ```
 
-### Versiyon Politikası
-| Versiyon | Açıklama |
+### Versioning Policy
+| Version | Description |
 |---|---|
-| `V.0.0.X` | Her commit bir patch |
-| `V.0.X.0` | Yeni özellik / modül |
-| `V.X.0.0` | Major sürüm |
+| `V.0.0.X` | Each commit is a patch |
+| `V.0.X.0` | New feature / module |
+| `V.X.0.0` | Major release |
 
 ---
 
-## 📋 Geliştirme Günlüğü
+## 📋 Development Log
 
-Tüm değişiklikler `Docs/DevLogs/` altında tarih bazlı markdown dosyalarında tutulur:
+All changes are tracked in date-based markdown files under `Docs/DevLogs/`:
 
 ```
 Docs/DevLogs/
-├── devlog.md               ← Ana index
+├── devlog.md               ← Main index
 ├── dev_log_12042026.md     ← V.0.0.1 – V.0.0.13
 └── dev_log_13042026.md     ← V.0.0.14 – V.0.0.16
 ```
 
 ---
 
-## 📄 Lisans
+## 📄 License
 
 MIT License — © 2026 [YoxbenSoftware](https://github.com/yoxbensoftware)
